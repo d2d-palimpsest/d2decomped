@@ -84,3 +84,19 @@ classification, palette lookup and final glyph drawing. Original glyph
 rasterization and non-Latin text are not claimed by this differential.
 The C++ regression also checks baseline pixels with a synthetic sprite,
 so it needs no proprietary data for that part.
+
+## Edit-box focus and selection reset (cited, not oracle-checked)
+
+Control kind is the first dword (`*ctl`); kind 1 is the name-field
+control (char-create-table.md, `FUN_005001d0`).
+
+| Address | Evidence |
+|---|---|
+| `FUN_004f91c0(ctl)` | Global `DAT_007d55c8` is the focused control. If unset, store `ctl`. If `ctl` differs from the stored one, call `FUN_004fdcc0` (resetting selection), then store `ctl`. Always returns 1. `FUN_00441320` calls it with 0 to clear focus after a click; `FUN_00436d50` focuses the control it just created (`DAT_007799cc`). |
+| `FUN_004fdcc0` (fastcall, control in ECX) | Null control reports error id 0x1a4; kind other than 1 reports 0x1a6; both go through `FUN_00408090` / `FUN_00408a60` ("Unrecoverable internal error %08x") and `FUN_00681e09(-1)`. Kind 1: `ctl[0x15] = -1; ctl[0x16] = 0` and returns, so it resets the selection pair. `FUN_004fe9f0` reads the same two dwords as the min of them to build its text, so they are the selection range. |
+
+Unproven: the decompiler hides which control `FUN_004fdcc0` receives from
+`FUN_004f91c0` (ECX; capstone is missing here, so no disassembly). The
+reading is the previously focused control, which fits "lose focus, drop
+selection". d2d: not ported (frontend.cpp draws a caret only, line 571).
+Re-check: `python3 tools/ghidra/fn.py 004f91c0 004fdcc0`.
