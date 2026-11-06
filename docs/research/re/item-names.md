@@ -83,6 +83,16 @@ line (`FUN_00486670`), Holy Shield's block and smite, time-of-day stats
   `python3 tools/ghidra/fn.py 00452170` and
   `python3 tools/ghidra/calls.py 00452170` (no callees).
 
+- `FUN_0044dcd0` (6 bytes): returns the byte `DAT_007a060c`, the client's
+  current difficulty (0 Normal, 1 Nightmare, 2 Hell). Evidence: Akara's menu
+  `FUN_004b4830` compares it with 2 beside quest 41 (quests.md), the oracle
+  `tools/emu/skill_tips.py` sets that address as "FUN_0044dcd0's difficulty",
+  and `FUN_0048c060` (below) compares it with stat 0x164, the difficulty a
+  questdiffcheck item was made in. It has about 25 callers
+  (`game-calls.tsv`); only these three were read. d2d: has no
+  function of that name; its difficulty (quests.md:176) reads the same,
+  cited from the decompile, no oracle run. Cited.
+
 ## Sockets
 
 - Inserting (C→S 0x28, `FUN_0054b650` → `FUN_00562660`): the held item
