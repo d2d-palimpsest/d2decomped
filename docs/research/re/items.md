@@ -97,7 +97,7 @@ slot) and `cmd::ToCursor` (the worn belt).
 
 ### ItemMode.cpp: the stat-use wrapper (traced 2026-11-06)
 
-All three functions below assert with source file `.\ITEMS\ItemMode.cpp`; registers are read from the decompile only, not the asm.
+Both functions below belong to source file `.\ITEMS\ItemMode.cpp`; registers are read from the decompile only, not the asm.
 
 | Address | What |
 |---|---|
