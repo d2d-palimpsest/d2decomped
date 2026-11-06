@@ -137,3 +137,8 @@ answers.
 d2d: `rules::equip`, called by the World's `cmd::ToBody` with the class's
 inventory grid. A joined client sends 0x1b / 0x1e the same way
 (`c2s::equip`'s `other_off`), and nothing when the move is refused.
+## The player's client (traced 2026-11-06)
+
+| Address | What |
+|---|---|
+| `FUN_005531c0` | Fastcall, unit in ECX. Returns 0 for a null unit or one whose type (`*unit`) is not 0 (player); else the player data's client field: `FUN_006221a0(unit)` (asserts 0xfb4 null, 0xfb6 wrong type; returns `unit+0x14`) read at `+0x9c`. d2d agrees: objects.cpp:378 calls it the unit's client. Ghidra shows constants as its argument at call sites (0xf94, 0x136d, 0x1370); quests-act5.md:284 reads such constants as assert source lines (not re-checked from the asm here). |
