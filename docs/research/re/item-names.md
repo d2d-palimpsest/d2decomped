@@ -113,7 +113,7 @@ line (`FUN_00486670`), Holy Shield's block and smite, time-of-day stats
   header). It zeroes a 2 KB buffer. If the hovered item (`DAT_007bcbf4`)
   is not a tome, or `FUN_006335f0` finds no Items row, it fails through
   `FUN_00408090(0xcf1 / 0xcf5)`, `FUN_00408a60`, `FUN_00681e09(-1)`, the
-  error exit used all over this file. Otherwise it writes the name
+  error exit `FUN_0048c060` also ends in. Otherwise it writes the name
   (`FUN_0048c060(0x80)`, `FUN_00452170`), then a second block: for hover
   mode `DAT_007bcbf0` 1..9 `FUN_0048cea0`, else `FUN_005267e0`. It
   measures the text (`FUN_00502520`, a value `n`) and draws it with
