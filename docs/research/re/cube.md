@@ -140,3 +140,15 @@ difficulty stat isn't checked; the auto placement is d2d's first fit. A
 valid recipes play `cursor_convert_ready`, then a successful transmute plays
 `cursor_convert_item`. Checked live (devctl, 2026-10-11): the Horadric Staff (bit 11) and
 three chipped rubies → a flawed ruby.
+
+## Dropping the Cube puts its contents away: FUN_00563840 (traced 2026-11-06)
+
+Source file `.\ITEMS\ItemMode.cpp` (asserts at lines 0x813, 0x817; read from the decompile, registers not checked against the asm). `FUN_00563c00` (network.md: C→S 0x17, drop the cursor's item) places the dropped item on the floor (`FUN_00555da0` / `FUN_00558aa0`) and then calls `FUN_00563840(game, item)`; it is the only caller. The player is passed in a register the decompile shows as `unaff_EBX`.
+
+- Gate: the item's class record (`FUN_006335f0(item+4)`) has the 4-byte code `+0x80` == `0x20786f62` ("box ", the Horadric Cube). A null item or no record asserts (`FUN_00408090` / `FUN_00408a60`, then exit). Any other item: nothing happens.
+- Walk the player's inventory (`player+0x60`, `FUN_0063b2c0`, nodes via `FUN_0063dfd0` / `FUN_0063dfa0`) and take each item whose page byte (`FUN_00628250`, item data `+0x45`) is 3, the Cube's own grid.
+- Each such item: its notice is sent (`FUN_005531c0` client, `FUN_0053d010` with the flag word 0x20 built by `FUN_006287b0`), it is looked up in the inventory (`FUN_0063ad90`; a different result asserts), put in mode 4 (cursor) with `FUN_00624690`, and its page is set to 0 (`FUN_00628280`).
+- It is found again by id (`FUN_00552f60`), and must be type 4 in mode 4. Then `FUN_0063b950` tries to place it in the inventory grid (page 0). On success: mode 0, item-data `+0x14` bit 2 set (`FUN_00628170`), `FUN_0055f590` (Items hasinv with contents) sets flag 1 and flag 0x4000 is cleared (`FUN_006280d0` / `FUN_006280a0`), the stats are redone (`FUN_0055c2c0`, `FUN_0055dbc0`).
+- No room: page 0xff, then `FUN_00555da0` finds the nearest free floor spot for it and `FUN_00558aa0` drops it there.
+
+d2d: not ported (no mention in `components/` or `apps/`; `Loot::place` handles the drop itself). Cited, not proven: no oracle written.
