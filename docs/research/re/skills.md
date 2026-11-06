@@ -195,6 +195,8 @@ This **resolves the "which of 0x6436e0 / 0x6436f0 is min vs max" question**: tab
 
 **Identifier → operand** (`FUN_006119f0` for skillcalc, `FUN_00661880` for misscalc): packs the first four chars of the identifier as a little-endian `uint32` (padded with `' '` if shorter) and looks it up in `FUN_006bd130(skillcalc[], key, 1)`. Identifiers longer than 4 chars are effectively truncated at 4 for lookup — which matches how skillcalc.txt keys `ln12`, `par1`, `edmn` etc. all fit in 4 bytes. `*param_2` returns 1 for "found in the special keyword tables" (`skills`, `events`, `states`, `hitclass`, `colors`), else 0 for "operand".
 
+**The key packer `FUN_00611760`** (75 bytes, called at three sites in `FUN_006119f0`: the `case 3`, `case 4` and `case 6` miss paths, before `FUN_006bd130(table, key, 1)`): a `__fastcall` copy of the identifier's first four bytes into a 4-byte buffer (destination in EAX). It stops at the first NUL and fills the rest with `' '` (0x20), so `ln12` stays `ln12`, `par34` becomes `par3`, `lvl` becomes `lvl `. No callees. d2d agrees: `components/rules/skills.hpp` looks names up by their first four characters. Proof: cited (no oracle run for this function alone; the Bone Wall `par34` emu check in bugs.md row 2 exercises it indirectly).
+
 Operand-emit is via `FUN_006c19c0` / `FUN_006c1a50`: small values emit op 4 (1-byte operand id), larger ones 5 (2-byte) or 6 (4-byte). The operand id is the skillcalc.txt row number (matches d2d's compiler and the runtime table already documented in **The calc language** above).
 
 **Traced in full (2026-10-02)**, from FUN_006c11c0 / FUN_006c18a0 /
