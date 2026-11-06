@@ -93,6 +93,22 @@ line (`FUN_00486670`), Holy Shield's block and smite, time-of-day stats
   function of that name; its difficulty (quests.md:176) reads the same,
   cited from the decompile, no oracle run. Cited.
 
+- `FUN_0048c060` (UI\inv.cpp, the name line; `item_lines` ports its quality
+  colours) ends with a quest-item recolour, read at its last 15 lines.
+  After the name is built (`FUN_00484c90`, `FUN_00452170`), with `row` the
+  item's Items.txt row (`FUN_006335f0`): if `row+0x12a` (quest) is set, then
+  (a) if `row+0x12b` (questdiffcheck) is set and the item's stat 0x164
+  (`FUN_00625480(item, 0x164, 0)`) is below `FUN_0044dcd0()`, it calls
+  `FUN_004521c0` (the colour-code prefix, skill-tooltips.md) and returns;
+  (b) otherwise, unless the code at `row+0x80` is `"leg "` (0x2067656c,
+  Wirt's leg), it calls `FUN_004521c0` too. So quest items are recoloured,
+  and a questdiffcheck item made in an easier difficulty than the current
+  one is recoloured the same; Wirt's leg only in case (a). The colour code
+  is in DL, which the decompile drops: not read, so which colour is open.
+  d2d: not ported (`item_lines` has no quest-item branch; `rules.hpp:100`
+  and `d2s_items.hpp:110` only carry stat 0x164 for the cube and save
+  parsing). Cited.
+
 ## Sockets
 
 - Inserting (C→S 0x28, `FUN_0054b650` → `FUN_00562660`): the held item
