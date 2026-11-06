@@ -143,7 +143,7 @@ three chipped rubies → a flawed ruby.
 
 ## Dropping the Cube puts its contents away: FUN_00563840 (traced 2026-11-06)
 
-Source file `.\ITEMS\ItemMode.cpp` (asserts at lines 0x813, 0x817; read from the decompile, registers not checked against the asm). `FUN_00563c00` (network.md: C→S 0x17, drop the cursor's item) places the dropped item on the floor (`FUN_00555da0` / `FUN_00558aa0`) and then calls `FUN_00563840(game, item)`; it is the only caller. The player is passed in a register the decompile shows as `unaff_EBX`.
+Source file `.\ITEMS\ItemMode.cpp` (asserts at lines 0x813, 0x817; read from the decompile, registers not checked against the asm). `FUN_00563c00` (network.md: C→S 0x17, drop the cursor's item) places the dropped item on the floor (`FUN_00555da0` / `FUN_00558aa0`) and then calls `FUN_00563840(game, item)`; it is the caller found (other callers not searched). The player is passed in a register the decompile shows as `unaff_EBX`.
 
 - Gate: the item's class record (`FUN_006335f0(item+4)`) has the 4-byte code `+0x80` == `0x20786f62` ("box ", the Horadric Cube). A null item or no record asserts (`FUN_00408090` / `FUN_00408a60`, then exit). Any other item: nothing happens.
 - Walk the player's inventory (`player+0x60`, `FUN_0063b2c0`, nodes via `FUN_0063dfd0` / `FUN_0063dfa0`) and take each item whose page byte (`FUN_00628250`, item data `+0x45`) is 3, the Cube's own grid.
