@@ -221,3 +221,30 @@ data from +8. A length under 8 returns 0.
 
 Who sets the two callbacks `DAT_00799300` / `DAT_00799304` was not traced
 (game-calls.tsv has no row for them). d2d side: **not ported**.
+
+## zlib-shaped helpers around `_memcpy` (cited)
+
+Read from the decompiled C only, no oracle: **cited**. The names are a
+reading of the field use (no assert string or source file name backs them),
+so they are a structural match to zlib's deflate, not proven to be it.
+
+- `FUN_0041d2a0` (27 bytes): `_memcpy(dst, src, n)` and nothing else, a
+  plain wrapper.
+- `FUN_00427450` (71 bytes, stream in EDI, not an argument): like zlib's
+  `flush_pending`. It calls `FUN_0042d150` (which only calls `FUN_0042cb40`),
+  then copies `min(stream +0x10, state +0x14)` bytes from the state's
+  pending-out pointer (+0x10) to the stream's output pointer (+0xc), moves
+  both pointers, adds to the stream's total (+0x14), takes the count off the
+  stream's room (+0x10) and the state's pending (+0x14), and when pending
+  hits 0 resets pending-out to the state's buffer (+8).
+- `FUN_00427560` (405 bytes, `__fastcall`: ECX = dest stream, EDX = source
+  stream): like zlib's `deflateCopy`. Returns -2 if either stream or the
+  source's state (+0x1c) is null; copies the 0x38-byte stream (0xe dwords),
+  allocates 0x16c4 bytes through the stream's allocator (+0x20), copies the
+  state, allocates three 2-byte-unit arrays and a 4-byte-unit buffer, copies
+  them, and re-points the tree pointers into the new state. On an
+  allocation failure it calls `FUN_004274a0` and returns -4. It has no
+  caller in game-calls.tsv.
+
+`_memcpy` `FUN_006829c0` has 123 call rows in game-calls.tsv; the other work-list callers (`FUN_0040a1f0`, `FUN_00410040`,
+`FUN_00427980`, `FUN_00427bb0`, `FUN_00428900`) were not traced.
