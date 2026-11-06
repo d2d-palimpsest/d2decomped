@@ -108,6 +108,18 @@ line (`FUN_00486670`), Holy Shield's block and smite, time-of-day stats
   d2d: not ported (`item_lines` has no quest-item branch; `rules.hpp:100`
   and `d2s_items.hpp:110` only carry stat 0x164 for the cube and save
   parsing). Cited.
+- `FUN_0048cff0` (UI\inv.cpp, 475 bytes): `FUN_0048dd90` calls it when
+  `FUN_0062b400(hovered item) == 0x12`, the tome type (`tome_use.py`
+  header). It zeroes a 2 KB buffer. If the hovered item (`DAT_007bcbf4`)
+  is not a tome, or `FUN_006335f0` finds no Items row, it fails through
+  `FUN_00408090(0xcf1 / 0xcf5)`, `FUN_00408a60`, `FUN_00681e09(-1)`, the
+  error exit used all over this file. Otherwise it writes the name
+  (`FUN_0048c060(0x80)`, `FUN_00452170`), then a second block: for hover
+  mode `DAT_007bcbf0` 1..9 `FUN_0048cea0`, else `FUN_005267e0`. It
+  measures the text (`FUN_00502520`, a value `n`) and draws it with
+  `FUN_00502280` at `DAT_00721e40`, or at `DAT_00721e48 + n` when
+  `DAT_00721e40 - n < 1`. `item_lines` has no tome-specific path (d2d:
+  not ported). Cited; the second block (`FUN_0048cea0`) is not traced.
 
 ## Sockets
 
