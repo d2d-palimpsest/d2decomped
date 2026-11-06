@@ -141,7 +141,7 @@ inventory grid. A joined client sends 0x1b / 0x1e the same way
 
 | Address | What |
 |---|---|
-| `FUN_005531c0` | Fastcall, unit in ECX. Returns 0 for a null unit or one whose type (`*unit`) is not 0 (player); else the player data's client field: `FUN_006221a0(unit)` (asserts 0xfb4 null, 0xfb6 wrong type; returns `unit+0x14`) read at `+0x9c`. d2d agrees: objects.cpp:378 calls it the unit's client. Ghidra shows constants as its argument at call sites (0xf94, 0x136d, 0x1370); quests-act5.md:284 reads such constants as assert source lines (not re-checked from the asm here). |
+| `FUN_005531c0` | Fastcall, unit in ECX. Returns 0 for a null unit or one whose type (`*unit`) is not 0 (player); else the player data's client field: `FUN_006221a0(unit)` (asserts 0xfb4 null, 0xfb6 wrong type; returns `unit+0x14`) read at `+0x9c`. d2d reads the same, cited from the decompile, no oracle run: objects.cpp:378 calls it the unit's client. Ghidra shows constants as its argument at call sites (0xf94, 0x136d, 0x1370); quests-act5.md:284 reads such constants as assert source lines (not re-checked from the asm here). |
 
 ### Taking an item out of an inventory (traced 2026-11-06)
 
@@ -161,9 +161,41 @@ Rows in call order (callee first). The SetItems table is `[0x744304] +0xc18` (ro
 
 | Address | What |
 |---|---|
-| `FUN_00629da0` | Fastcall-looking, one argument (a unit). Returns the item's named-row index: `*(unit->data + 0x28)` when the unit's type (`*unit`) is 4 (item) and its data pointer (`unit[5]`) is non-null. Otherwise it asserts and exits: a null unit 0x1070, a non-item 0x1071, a null data 0x1073 (`FUN_00408090` / `FUN_00408a60` / `FUN_00681e09(-1)`). The index is a UniqueItems row for quality 7, a SetItems row for quality 5 (the Cube input check reads it as "the named row", cube.md). 74 bytes; 5 direct callers in the work list (`FUN_00486770`, `FUN_0048c060`, `FUN_0048d1d0`, `FUN_004c16d0`, `FUN_004c17f0`). d2d: agrees, the field is `Item::set_id` / the unique index in the parsed item; the assert numbers are not ported. |
-| `FUN_0062b3a0` | One argument (a unit). Returns -1 unless the unit is an item (`*unit == 4`) whose data (`unit[5]`) has quality `*data == 5` (set). Then it takes `FUN_00629da0`'s row index, and if it is in `0 .. [0x744304]+0xc1c` returns the SetItems row's short at `+0x2e`: the item's place in its set. The loader (the function that calls `FUN_006122f0(.., "setitems", .., 0x1b8)`, result in `DAT_0096c848`) writes `+0x2e` as the set's running member count (the Sets row's `+0xc`, stride 0x128) and only while that count is below 6; `+0x2c` is the set index (looked up from the row's set column; the loader also sets the name string id at `+0x24`, default 0x1507). A row of a full or unknown set keeps whatever the allocation left in `+0x2e`. d2d: agrees, `SetItem::member` is "the loader's running count per set (at most 6)" (`gamedata_load.cpp:1375`, `rules.hpp:148`); d2d gives -1 where the game leaves the unwritten value (not reachable with the shipped SetItems, whose sets have at most 6 pieces; unchecked). |
+| `FUN_00629da0` | Fastcall-looking, one argument (a unit). Returns the item's named-row index: `*(unit->data + 0x28)` when the unit's type (`*unit`) is 4 (item) and its data pointer (`unit[5]`) is non-null. Otherwise it asserts and exits: a null unit 0x1070, a non-item 0x1071, a null data 0x1073 (`FUN_00408090` / `FUN_00408a60` / `FUN_00681e09(-1)`). The index is a UniqueItems row for quality 7, a SetItems row for quality 5 (the Cube input check reads it as "the named row", cube.md). 74 bytes; 5 direct callers in the work list (`FUN_00486770`, `FUN_0048c060`, `FUN_0048d1d0`, `FUN_004c16d0`, `FUN_004c17f0`). d2d: reads the same, cited from the decompile, no oracle run; the field is `Item::set_id` / the unique index in the parsed item; the assert numbers are not ported. |
+| `FUN_0062b3a0` | One argument (a unit). Returns -1 unless the unit is an item (`*unit == 4`) whose data (`unit[5]`) has quality `*data == 5` (set). Then it takes `FUN_00629da0`'s row index, and if it is in `0 .. [0x744304]+0xc1c` returns the SetItems row's short at `+0x2e`: the item's place in its set. The loader (the function that calls `FUN_006122f0(.., "setitems", .., 0x1b8)`, result in `DAT_0096c848`) writes `+0x2e` as the set's running member count (the Sets row's `+0xc`, stride 0x128), guarded by a count-below-6 check in the loader code read (other writers of `+0x2e` not searched); `+0x2c` is the set index (looked up from the row's set column; the loader also sets the name string id at `+0x24`, default 0x1507). In the loader code read, a row whose set is full (count not below 6) or unknown has no write to `+0x2e`, so it keeps whatever the allocation left there (other writers not searched). d2d: reads the same, cited from the decompile, no oracle run; `SetItem::member` is "the loader's running count per set (at most 6)" (`gamedata_load.cpp:1375`, `rules.hpp:148`); d2d gives -1 where the game leaves the unwritten value (not checked whether the shipped SetItems can reach it; no sets table was counted). |
 | `FUN_0062a490` | One argument (a unit). Returns 0 unless the unit is an item (`*unit == 4`) with quality `*data == 5`; else `FUN_00629da0`'s index, and when it is in `0 .. [0x744304]+0xc1c` the SetItems row pointer `index * 0x1b8 + [0x744304]+0xc18`, otherwise 0. The same lookup as `FUN_00483440` (row by index) with the item gate in front. Callers: `FUN_004e6560` (reads the row's add func at `+0x87`, 1 or 2) and `FUN_00663a20`. d2d: reads the same, cited from the decompile, no oracle run; `rules.sets[set_id]` with `quality == 5` and a range check (`character.hpp:63`, `:84`); `add_func` is the "add func" column (`gamedata_load.cpp:1359`). |
 | Address | What |
 |---|---|
 | `FUN_0055ed30` | Fastcall (item in the third argument, an owner unit in EDX; ECX is not read). Clears bit 1 of item `+0xc4` (`[0x31]`), then `FUN_0063ad90(owner+0x60, item)`: null if the inventory is null, or the unit is not type 4 (item), or `FUN_0063ad50` says it is not in that inventory; else `FUN_0063aaf0()` and the item back. Null returns assert 0x12e9; a returned unit other than `item` asserts 0x12ea (both through `FUN_00408090` / `FUN_00408a60`, then exit). On success: class = item data `+0xc` for unit types 2, 4, 5, else 0 for a null data pointer, else `FUN_006488c0(data)`; `FUN_0063c550(inventory, class)` (empty body in the decompile: a stub, argument count unconfirmed); then `FUN_00557fd0` (`FUN_005538d0` calls a callback for each of 128 buckets at game `+0x1120`, then `FUN_00555600`). d2d: not ported. |
+
+## An item removed after a belt potion is used (`FUN_00561e70`)
+
+`FUN_00561e70(item)` is in `ITEMS/ItemMode.cpp` (`game-srcfiles.tsv`, 89
+bytes). It has three callers: `FUN_00561ed0` (the identify handler ported at
+`commands.cpp:135`), `FUN_00562390` (C->S 0x26, use belt, called after the
+potion's effect `FUN_005bf240` succeeds and after `FUN_0055bf50(0x1370)`), and
+`FUN_005a30e0` (a MonUMod 24 hit, after it moves the item with `FUN_00558aa0`).
+
+It does four things, in order:
+
+1. Looks up the client with `FUN_005531c0` (assert line `0xf94`).
+2. Builds a local mask of 0 and sets bit `0x20` in it with `FUN_006287b0`
+   (the `|=` form, see the table above).
+3. Tells the client through `FUN_0053eed0(item, mask)`, the wrapper that calls
+   the 0x9c builder `FUN_0053eae0` with `0xf` (net-packets.md "0x9c item in the
+   world", action 0x0f is "out of the belt").
+4. Calls `FUN_0055ed30(item)`: clears bit 1 of the item's word at index `0x31`
+   (byte `+0xc4`), takes the item out of its container with `FUN_0063ad90`
+   (assert lines `0x12e9` / `0x12ea` when that fails or returns another unit)
+   and frees the slot through `FUN_0063c550` / `FUN_00557fd0`.
+
+Not proven: Ghidra's call arguments for the register-passed parameters
+(`FUN_005531c0`, `FUN_0053eed0`, `FUN_0055ed30`) are incomplete, and the
+disassembly was not available in this run, so which of `0xf` and `0x20` is the
+packet action and which is the item-flag mask is read from the decompile only.
+
+d2d: not ported as a function. A single-player game has no client packet, and
+the use-belt path (`cmd::UseBelt`) removes the potion directly.
+
+Re-check (cited, no oracle run): `python3 tools/ghidra/fn.py 00561e70`, then
+`python3 tools/ghidra/calls.py 00561e70`.
