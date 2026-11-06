@@ -72,6 +72,17 @@ Not yet: set item / set bonus lists (`FUN_004e6410` flags), the gold
 line (`FUN_00486670`), Holy Shield's block and smite, time-of-day stats
 268-273, throwing potions' missile damage, charged skill details.
 
+## Hover helpers (UI\inv.cpp, traced)
+
+- `FUN_00452170` (3 bytes, `__fastcall`): returns ECX unchanged, an identity
+  function with no side effects. Its callers are `FUN_0048c060` (right
+  after `FUN_00484c90`), `FUN_0048cff0`, `FUN_0048d1d0`, `FUN_0048db80`,
+  `FUN_0048dd90` and `FUN_00497a40`; the decompile drops the ECX argument,
+  so what they pass is not read. Porting it needs nothing. d2d: not
+  ported, no mention. Cited: read from
+  `python3 tools/ghidra/fn.py 00452170` and
+  `python3 tools/ghidra/calls.py 00452170` (no callees).
+
 ## Sockets
 
 - Inserting (C→S 0x28, `FUN_0054b650` → `FUN_00562660`): the held item

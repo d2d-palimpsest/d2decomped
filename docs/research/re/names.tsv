@@ -2,6 +2,7 @@ address	name	evidence
 00427450	zlib_flush_pending_like	copies min(avail_out, pending) from state +0x10 to stream +0xc (network.md, structural match)
 00427560	zlib_deflate_copy_like	copies a 0x38-byte stream and a 0x16c4-byte state, -2 / -4 errors (network.md, structural match)
 0044afc0	mcp_chunk_reassemble	MCP table 0x70ed00 entry 0x11; u16 total/chunk/offset at +2/+4/+6, buffer 0x799318 (network.md)
+00452170	identity_fastcall	returns ECX unchanged (3 bytes); called after the name / tooltip pieces in FUN_0048c060, FUN_0048cff0, FUN_0048d1d0 (item-names.md)
 00456ee0	panel_draw_order	in-game UI draw: belt (FUN_00499450), picker, level buttons, globes in that order
 004791b0	utrans_pet_colour	the 0x7a pet list's owner, the roster's flag 8 (0x46665c reads it)
 00499040	belt_key_labels	SetFont(1) at 0x499053, then the belt slots' key names
