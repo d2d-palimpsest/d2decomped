@@ -179,3 +179,45 @@ belt potion sends it too, where game.exe sends 0x26 with the item's id.
 The field layouts of the gameplay packets (both directions), what the
 client works out for itself, and how they map onto d2d's View:
 net-packets.md.
+
+## MCP 0x11 reply: `FUN_0044afc0`, a chunk reassembler (cited)
+
+Traced from the decompiled C only; the register and stack arguments were
+not checked in the disassembly, and no oracle has run it: **cited**, not
+proven. d2d ports none of it (`git grep -i -E "44afc0|00799310|0079930c"` in
+`components/` and `apps/` finds nothing).
+
+`FUN_0044afc0` (339 bytes, `__fastcall`: ECX = packet, EDX = length) is the
+handler at `0x70ed44`, entry 0x11 of the main MCP table `0x70ed00`
+(`0x70ed00 + 4 * 0x11`). Its sender is `FUN_0044aa10`, which builds
+`11, <ecx low byte>, <u16 edx>` and sends 4 bytes through `FUN_006bc8a0`.
+docs/design/battlenet.md:148 names the pair REQUESTLADDERDATA; the handler
+itself does only the chunk protocol below; what the callbacks do with the
+records (ladder data or not) was not traced. It
+returns 0 for a bad packet and 1 otherwise.
+
+Packet: +1 byte `tag` (handed to the callback), +2 u16 `total` (size of the
+whole message), +4 u16 `chunk` (bytes in this packet), +6 u16 `offset`,
+data from +8. A length under 8 returns 0.
+
+- `total`, `chunk` and `offset` all 0: calls `DAT_00799300(0, 0, 0)`, clears
+  `DAT_00799310` (bytes still expected) and `DAT_0079930c` (bytes held),
+  returns 1.
+- `total` <= 0xb returns 0.
+- Otherwise `DAT_00799310 = total` and `DAT_0079930c = offset`. If
+  `chunk + offset > total` it returns 0. Else `_memcpy` (`FUN_006829c0`,
+  the CRT one, which handles overlap; its callee `__VEC_memcpy`
+  `FUN_0068c9c0` is the CRT's SSE helper) copies the chunk to
+  `0x799318 + offset`, and `DAT_0079930c = chunk + offset`. The only bound
+  is `total`; the buffer's size was not measured.
+- While `total > chunk + offset` it returns 1 and waits for more.
+- When complete: calls `DAT_00799304()` if set, then walks records in the
+  buffer. A record is three i32 `{ a, n, m }` then `n * (m + 0xc)` bytes. The
+  walk stops (leaving `DAT_00799310` at the bytes left minus 0xc, not 0) if
+  `n` or `m` is negative, `n` > 0x100, `m` > 0x10, `a` > 2000, or the
+  record is larger than what is left. For each valid record it calls
+  `DAT_00799300(m, tag, record + 12)`, then moves on 12 + size bytes. A clean
+  walk ends with `DAT_00799310 = 0`.
+
+Who sets the two callbacks `DAT_00799300` / `DAT_00799304` was not traced
+(game-calls.tsv has no row for them). d2d side: **not ported**.
