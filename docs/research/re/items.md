@@ -91,3 +91,9 @@ slot) and `cmd::ToCursor` (the worn belt).
 | Address | What |
 |---|---|
 | `FUN_005531c0` | Fastcall, unit in ECX. Returns 0 for a null unit or one whose type (`*unit`) is not 0 (player); else the player data's client field: `FUN_006221a0(unit)` (asserts 0xfb4 null, 0xfb6 wrong type; returns `unit+0x14`) read at `+0x9c`. d2d agrees: objects.cpp:378 calls it the unit's client. Ghidra shows constants as its argument at call sites (0xf94, 0x136d, 0x1370); quests-act5.md:284 reads such constants as assert source lines (not re-checked from the asm here). |
+
+### Taking an item out of an inventory (traced 2026-11-06)
+
+| Address | What |
+|---|---|
+| `FUN_0055ed30` | Fastcall (item in the third argument, an owner unit in EDX; ECX is not read). Clears bit 1 of item `+0xc4` (`[0x31]`), then `FUN_0063ad90(owner+0x60, item)`: null if the inventory is null, or the unit is not type 4 (item), or `FUN_0063ad50` says it is not in that inventory; else `FUN_0063aaf0()` and the item back. Null returns assert 0x12e9; a returned unit other than `item` asserts 0x12ea (both through `FUN_00408090` / `FUN_00408a60`, then exit). On success: class = item data `+0xc` for unit types 2, 4, 5, else 0 for a null data pointer, else `FUN_006488c0(data)`; `FUN_0063c550(inventory, class)` (empty body in the decompile: a stub, argument count unconfirmed); then `FUN_00557fd0` (`FUN_005538d0` calls a callback for each of 128 buckets at game `+0x1120`, then `FUN_00555600`). d2d: not ported. |
