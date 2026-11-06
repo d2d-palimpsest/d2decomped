@@ -116,3 +116,35 @@ Rows in call order (callee first). The SetItems table is `[0x744304] +0xc18` (ro
 | Address | What |
 |---|---|
 | `FUN_0055ed30` | Fastcall (item in the third argument, an owner unit in EDX; ECX is not read). Clears bit 1 of item `+0xc4` (`[0x31]`), then `FUN_0063ad90(owner+0x60, item)`: null if the inventory is null, or the unit is not type 4 (item), or `FUN_0063ad50` says it is not in that inventory; else `FUN_0063aaf0()` and the item back. Null returns assert 0x12e9; a returned unit other than `item` asserts 0x12ea (both through `FUN_00408090` / `FUN_00408a60`, then exit). On success: class = item data `+0xc` for unit types 2, 4, 5, else 0 for a null data pointer, else `FUN_006488c0(data)`; `FUN_0063c550(inventory, class)` (empty body in the decompile: a stub, argument count unconfirmed); then `FUN_00557fd0` (`FUN_005538d0` calls a callback for each of 128 buckets at game `+0x1120`, then `FUN_00555600`). d2d: not ported. |
+
+## An item removed after a belt potion is used (`FUN_00561e70`)
+
+`FUN_00561e70(item)` is in `ITEMS/ItemMode.cpp` (`game-srcfiles.tsv`, 89
+bytes). It has three callers: `FUN_00561ed0` (the identify handler ported at
+`commands.cpp:135`), `FUN_00562390` (C->S 0x26, use belt, called after the
+potion's effect `FUN_005bf240` succeeds and after `FUN_0055bf50(0x1370)`), and
+`FUN_005a30e0` (a MonUMod 24 hit, after it moves the item with `FUN_00558aa0`).
+
+It does four things, in order:
+
+1. Looks up the client with `FUN_005531c0` (assert line `0xf94`).
+2. Builds a local mask of 0 and sets bit `0x20` in it with `FUN_006287b0`
+   (the `|=` form, see the table above).
+3. Tells the client through `FUN_0053eed0(item, mask)`, the wrapper that calls
+   the 0x9c builder `FUN_0053eae0` with `0xf` (net-packets.md "0x9c item in the
+   world", action 0x0f is "out of the belt").
+4. Calls `FUN_0055ed30(item)`: clears bit 1 of the item's word at index `0x31`
+   (byte `+0xc4`), takes the item out of its container with `FUN_0063ad90`
+   (assert lines `0x12e9` / `0x12ea` when that fails or returns another unit)
+   and frees the slot through `FUN_0063c550` / `FUN_00557fd0`.
+
+Not proven: Ghidra's call arguments for the register-passed parameters
+(`FUN_005531c0`, `FUN_0053eed0`, `FUN_0055ed30`) are incomplete, and the
+disassembly was not available in this run, so which of `0xf` and `0x20` is the
+packet action and which is the item-flag mask is read from the decompile only.
+
+d2d: not ported as a function. A single-player game has no client packet, and
+the use-belt path (`cmd::UseBelt`) removes the potion directly.
+
+Re-check (cited, no oracle run): `python3 tools/ghidra/fn.py 00561e70`, then
+`python3 tools/ghidra/calls.py 00561e70`.
