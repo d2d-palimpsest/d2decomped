@@ -145,6 +145,14 @@ inventory grid. A joined client sends 0x1b / 0x1e the same way
 
 ### Taking an item out of an inventory (traced 2026-11-06)
 
+
+### ItemMode.cpp: the stat-use wrapper (traced 2026-11-06)
+
+All three functions below assert with source file `.\ITEMS\ItemMode.cpp`; registers are read from the decompile only, not the asm.
+
+| Address | What |
+|---|---|
+| `FUN_0055c270` | Fastcall, two arguments (unit in ECX, a second value in EDX). A null ECX asserts line argument 0x24d, a null EDX 0x24e (both through `FUN_00408090` / `FUN_00408a60` / `FUN_00681e09(-1)`, the exit path). Otherwise, only when the unit's type (`*unit`) is 0 (player), it calls `FUN_0055c110(1)` and returns; other unit types do nothing. `FUN_0055c110` (not traced here) reads a stat (0x46) and the player's skill state via `FUN_006439b0`, and sends through `FUN_0053c520`. Callers: `FUN_0055c2c0`, `FUN_0055e9b0`, `FUN_0055eb30`, `FUN_005600a0`, `FUN_00560200`. d2d: not ported (no mention in `components/` or `apps/`). |
 | Address | What |
 |---|---|
 | `FUN_0055ed30` | Fastcall (item in the third argument, an owner unit in EDX; ECX is not read). Clears bit 1 of item `+0xc4` (`[0x31]`), then `FUN_0063ad90(owner+0x60, item)`: null if the inventory is null, or the unit is not type 4 (item), or `FUN_0063ad50` says it is not in that inventory; else `FUN_0063aaf0()` and the item back. Null returns assert 0x12e9; a returned unit other than `item` asserts 0x12ea (both through `FUN_00408090` / `FUN_00408a60`, then exit). On success: class = item data `+0xc` for unit types 2, 4, 5, else 0 for a null data pointer, else `FUN_006488c0(data)`; `FUN_0063c550(inventory, class)` (empty body in the decompile: a stub, argument count unconfirmed); then `FUN_00557fd0` (`FUN_005538d0` calls a callback for each of 128 buckets at game `+0x1120`, then `FUN_00555600`). d2d: not ported. |
