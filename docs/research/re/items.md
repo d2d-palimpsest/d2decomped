@@ -90,7 +90,7 @@ slot) and `cmd::ToCursor` (the worn belt).
 
 | Address | What |
 |---|---|
-| `FUN_005531c0` | Fastcall, unit in ECX. Returns 0 for a null unit or one whose type (`*unit`) is not 0 (player); else the player data's client field: `FUN_006221a0(unit)` (asserts 0xfb4 null, 0xfb6 wrong type; returns `unit+0x14`) read at `+0x9c`. d2d agrees: objects.cpp:378 calls it the unit's client. Ghidra shows constants as its argument at call sites (0xf94, 0x136d, 0x1370); quests-act5.md:284 reads such constants as assert source lines (not re-checked from the asm here). |
+| `FUN_005531c0` | Fastcall, unit in ECX. Returns 0 for a null unit or one whose type (`*unit`) is not 0 (player); else the player data's client field: `FUN_006221a0(unit)` (asserts 0xfb4 null, 0xfb6 wrong type; returns `unit+0x14`) read at `+0x9c`. d2d reads the same, cited from the decompile, no oracle run: objects.cpp:378 calls it the unit's client. Ghidra shows constants as its argument at call sites (0xf94, 0x136d, 0x1370); quests-act5.md:284 reads such constants as assert source lines (not re-checked from the asm here). |
 
 ### Taking an item out of an inventory (traced 2026-11-06)
 
