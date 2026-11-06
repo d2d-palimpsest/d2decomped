@@ -10,6 +10,10 @@ address	name	evidence
 00620190	left_skill	FUN_00643930: the skill list's +8
 006201d0	right_skill	FUN_00643960: the skill list's +0xc
 00624390	set_mode_rate	FrameDelta; without Sync delta - delta/16 + rand(delta/8) at 0x624558
+00613d30	load_experience_table	"experience" rows of 0x20 bytes into DAT_0096c8a8 (chartemplate.md)
+00637500	load_low_quality_items	"lowqualityitems" rows of 0x22 bytes, name key id at +0x20 (chartemplate.md)
+00664b10	chartemplate_level_index	DAT_0096d500[level] = first row of that level, byte at row+0x1f (chartemplate.md)
+00664b80	load_chartemplate	"chartemplate" rows of 0xf0 bytes into DAT_0096d600 (chartemplate.md)
 00642860	drlg_vis_node_get	find-or-create of the act +0x90 list's node for a level: id, Vis0..7 (def +0x48), Warp0..7 (def +0x68), next; Drlg.cpp line 0x3e0
 00665f40	ds1_cache_acquire	thiscall (out, path): finds path in the list at DAT_0096d60c (byte-exact compare) and bumps the refcount, else loads via FUN_00665950; ".\DRLG\Preset.cpp" lines 0x4e0, 0x4e1
 0066b9d0	room_rect_contains	fastcall (rect, x, y): rect = {x, y, w, h} ints; true when rx <= x <= rx+w and ry <= y <= ry+h (edges inclusive); callers FUN_0066c3d0, FUN_0066c870, FUN_0066cf60, FUN_0066e4c0
